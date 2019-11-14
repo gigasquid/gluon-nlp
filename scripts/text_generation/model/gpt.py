@@ -30,7 +30,7 @@ from gluonnlp.model.utils import _load_vocab, _load_pretrained_params
 from gluonnlp.base import get_home_dir
 
 
-class GPT2SelfAttentionLayer(Block):
+class GPT2SelfAttentionLayer(HybridBlock):
     """Self-attention layer used in OpenAI GPT-2.
 
     Parameters
@@ -86,7 +86,8 @@ class GPT2SelfAttentionLayer(Block):
                                       bias_initializer=bias_initializer,
                                       prefix='out_proj_')
 
-    def forward(self, data, states=None): # pylint: disable=arguments-differ
+    def hybrid_forward(self, F, data, states=None): # pylint: disable=arguments-differ
+
         batch_size = data.shape[0]
         seq_len = data.shape[1]
         # Generate mask
@@ -184,7 +185,7 @@ class GPT2FFNLayer(HybridBlock):
         return out
 
 
-class GPT2Model(Block):
+class GPT2Model(HybridBlock):
     """Generic Model for GPT-2.
 
     Parameters
@@ -221,7 +222,7 @@ class GPT2Model(Block):
                                        weight_initializer=mx.init.Normal(0.02))
             self._logits_proj = nn.Dense(units=vocab_size, in_units=units, use_bias=False,
                                          flatten=False, params=self._embed.params)
-            self._self_attention_layers = nn.Sequential()
+            self._self_attention_layers = nn.HybridSequential()
             self._ffn_layers = nn.HybridSequential()
             self._attn_ln = nn.HybridSequential()
             self._ffn_ln = nn.HybridSequential()
@@ -235,7 +236,7 @@ class GPT2Model(Block):
                 self._ffn_ln.add(nn.LayerNorm(prefix='ffn_ln{}_'.format(i)))
                 self._final_ln = nn.LayerNorm(prefix='final_ln{}_'.format(i))
 
-    def forward(self, data, states=None): # pylint: disable=arguments-differ
+    def hybrid_forward(self, F, data, states=None): # pylint: disable=arguments-differ
         """
 
         Parameters
